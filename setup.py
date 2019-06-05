@@ -14,6 +14,7 @@ except ImportError:
 version = esteid.__version__
 
 readme = open('README.md').read()
+requirements = open('requirements.txt').read()
 
 setup(
     name='django-esteid',
@@ -27,13 +28,7 @@ setup(
         'esteid',
     ],
     include_package_data=True,
-    install_requires=[
-        'django>=1.8,!=2.1.0,!=2.1.1',
-        'attrs>=17.2.0',
-        'lxml>=3.4',
-        'zeep>=2.4.0',
-        'pycryptodome>=3.7.2',
-    ],
+    install_requires=requirements.splitlines(),
     license="BSD",
     zip_safe=False,
     keywords='esteid django',

@@ -5,8 +5,7 @@
 
 Django-esteid is a package that provides Esteid based authentication for your Django applications.
 
-Quickstart
-----------
+## Quickstart
 
 Install Django esteid:
 
@@ -23,3 +22,7 @@ Add django-esteid to installed apps:
 Then use it in a project:
 
     import esteid
+
+## SmartID
+
+Detailed docs are [here](esteid/smartid/README.md).
