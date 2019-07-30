@@ -18,6 +18,11 @@ from .signature_verifier import verify
 logger = logging.getLogger(__name__)
 
 
+def get_utc_time():
+    # For testing purposes, as we can't patch a datetime object
+    return datetime.utcnow()
+
+
 class XmlSignature(object):
     """
     Usage:
@@ -70,12 +75,7 @@ class XmlSignature(object):
 
     def __init__(self, xml_or_binary_data):
         if isinstance(xml_or_binary_data, (etree._Element, etree._ElementTree)):
-            if xml_or_binary_data.tag != '{%s}XAdESSignatures' % self.NAMESPACES['asic']:
-                raise ValueError("Expecting an 'asic:XAdESSignatures' root node")
             self.xml = xml_or_binary_data
-            data_objects_props_node = self._get_node('ds:SignedInfo')
-            doc_entries = data_objects_props_node.findall('ds:Reference[@Type=""]', namespaces=self.NAMESPACES)
-            self.doc_ids = [doc_entry.attrib['Id'] for doc_entry in doc_entries]
         else:
             parser = etree.XMLParser(remove_blank_text=True, remove_comments=True)
             try:
@@ -83,8 +83,13 @@ class XmlSignature(object):
             except ValueError:
                 logger.exception("Failed to load XML document: %s", xml_or_binary_data)
                 raise
-            # There is already one template document entry in the XML template
-            self.doc_ids = []
+
+        if self.xml.tag != '{%s}XAdESSignatures' % self.NAMESPACES['asic']:
+            raise ValueError("Expecting an 'asic:XAdESSignatures' root node")
+
+        data_objects_props_node = self._get_node('ds:SignedInfo')
+        doc_entries = data_objects_props_node.findall('ds:Reference[@Type=""]', namespaces=self.NAMESPACES)
+        self.doc_ids = [doc_entry.attrib['Id'] for doc_entry in doc_entries]
 
         self._certificate = None  # type: Certificate
 
@@ -92,7 +97,9 @@ class XmlSignature(object):
     def create(cls):
         """Create a XAdES structure from the accompanying template"""
         with open(cls.SIGNATURE_TEMPLATE, 'rb') as f:
-            return cls(f.read().replace(b'{SIGNATURE_ID}', cls.NEW_SIGNATURE_ID.encode('ascii')))
+            xml_sig = cls(f.read().replace(b'{SIGNATURE_ID}', cls.NEW_SIGNATURE_ID.encode('ascii')))
+            xml_sig.doc_ids = []
+            return xml_sig
 
     def get_signed_time(self):
         return self._get_node('xades:SigningTime').text
@@ -213,7 +220,7 @@ class XmlSignature(object):
         time_node = signed_props_node.find('.//xades:SigningTime', namespaces=self.NAMESPACES)
         # Add a UTC timestamp. Can't use isoformat() as it adds +00:00 and microseconds
         #  which can break the parser elsewhere
-        time_node.text = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+        time_node.text = get_utc_time().strftime('%Y-%m-%dT%H:%M:%SZ')
 
         signed_props_c14n = self.canonicalize(signed_props_node, c14n_alg)
         # TODO select algorithm based on DigestMethod // update DigestMethod
