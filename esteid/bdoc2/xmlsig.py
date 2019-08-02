@@ -267,27 +267,30 @@ class XmlSignature(object):
         certs_node.append(ca_node)
         return self
 
-    def add_ocsp_response(self, ocsp_response):
+    def add_ocsp_response(self, ocsp_response, embed_ocsp_certificate=False):
         """
         Embed the OCSP response and certificates
 
         :param OCSP ocsp_response:
+        :param bool embed_ocsp_certificate: Whether to add ocsp certificate to the xml. This is needed when the OCSP service in use
+            does not embed the certificate in its response.
         :return: self
         """
         ocsp_response_node = self._get_node('xades:EncapsulatedOCSPValue')
         ocsp_response_node.text = base64.b64encode(ocsp_response.get_encapsulated_response())
-        #
-        # ocsp_certs_node = self._get_node('xades:CertificateValues')
-        # ocsp_certs = ocsp_response.get_responder_certs()
-        # cert_node = ocsp_certs_node.find('.//xades:EncapsulatedX509Certificate', namespaces=self.NAMESPACES)
-        # cert_node.text = base64.b64encode(ocsp_certs[0].dump())
-        # cert_node.attrib['Id'] = 'S1-Responder-cert-1'
-        #
-        # for i, next_cert in enumerate(ocsp_certs[1:]):
-        #     cert_node = copy.deepcopy(cert_node)
-        #     cert_node.text = base64.b64encode(ocsp_certs[next_cert].dump())
-        #     cert_node.attrib['Id'] = 'S1-Responder-cert-%d' % i
-        #     ocsp_certs_node.append(cert_node)
+
+        if embed_ocsp_certificate:
+            ocsp_certs_node = self._get_node('xades:CertificateValues')
+            ocsp_certs = ocsp_response.get_responder_certs()
+            cert_node = ocsp_certs_node.find('.//xades:EncapsulatedX509Certificate', namespaces=self.NAMESPACES)
+            cert_node.text = base64.b64encode(ocsp_certs[0].dump())
+            cert_node.attrib['Id'] = 'S1-Responder-cert-1'
+
+            for i, next_cert in enumerate(ocsp_certs[1:]):
+                cert_node = copy.deepcopy(cert_node)
+                cert_node.text = base64.b64encode(ocsp_certs[next_cert].dump())
+                cert_node.attrib['Id'] = 'S1-Responder-cert-%d' % i
+                ocsp_certs_node.append(cert_node)
 
         return self
 

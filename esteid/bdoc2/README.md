@@ -143,7 +143,7 @@ Is a timestamp in ISO 8601 format.
 
 #### SignaturePolicyIdentifier 
 
-This appears to be a static XML chunk referencing the BDOC 2.1 Specifications document:
+This appears to be a static^1 XML chunk referencing the BDOC 2.1 Specifications document:
 ```xml
 <xades:SignaturePolicyIdentifier>
     <xades:SignaturePolicyId>
@@ -163,6 +163,8 @@ This appears to be a static XML chunk referencing the BDOC 2.1 Specifications do
     </xades:SignaturePolicyId>
 </xades:SignaturePolicyIdentifier>
 ```
+
+[1] The DigestValue is the hash value of current document in base64 encoding. Refer to [BDOC 2.1:2014 Specification](https://www.id.ee/public/bdoc-spec212-eng.pdf) for more information.
 
 #### SigningCertificate
 
